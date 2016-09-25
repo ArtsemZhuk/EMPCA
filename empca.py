@@ -96,7 +96,7 @@ class EMPCA(BaseEstimator, TransformerMixin):
 
 
 if __name__ == '__main__':
-    X = np.array([[1, 1], [2, 2], [7, 7]], dtype=np.float64)
+    X = np.array([[111, 12], [123, 4423], [125, 61]], dtype=np.float64)
     normalize(X)
     #print(X)
 
@@ -106,9 +106,10 @@ if __name__ == '__main__':
     print("components\n", empca.components_)
     #print(empca.transform(X))
 
-    pca = PCA(n_components=2)
+    pca = PCA(n_components=1)
     pca.fit(X)
     print("pca_components", pca.components_)
+    print("pca_transfomed", pca.transform(X))
     print("pca_ratio", pca.explained_variance_ratio_)
 
     exit(0)

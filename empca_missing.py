@@ -12,10 +12,8 @@ from utils import gram_schmidt, normalize, submatrix
 
 
 class EMPCAM(BaseEstimator, TransformerMixin):
-    def __init__(self, n_components, copy=False,
-                 n_iter=100):
+    def __init__(self, n_components, n_iter=100):
         self.n_components = n_components
-        self.copy = copy
         self.n_iter = n_iter
 
     def fit(self, X, y=None):

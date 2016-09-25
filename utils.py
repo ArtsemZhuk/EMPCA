@@ -1,6 +1,26 @@
 import numpy as np
 from sklearn.utils import check_array
 
+
+def random_matrix(n, m, gen=np.random.uniform):
+    res = np.zeros([n, m])
+    for i in range(n):
+        for j in range(m):
+            res[i][j] = gen()
+    return res
+
+
+def random_model(N, D, d):
+    W = random_matrix(D, d, gen=lambda : np.random.uniform(-10, 10))
+    eps = 0.5
+
+    X = []
+    T = np.random.multivariate_normal(np.zeros(d), np.eye(d), N)
+    noise = np.random.multivariate_normal(np.zeros(D), np.eye(D) * eps, N)
+
+    return (T.dot(W.T) + noise, W, T)
+
+
 def normalize(X):
     mean = []
     for i in range(X.shape[1]):
@@ -43,6 +63,8 @@ def gram_schmidt(X, tr=False, remove=False, copy=False):
         len = np.linalg.norm(cur)
         if not remove or len > 0:
             Y.append(cur / len)
+        elif not remove:
+            Y.append(cur)
 
     X = np.array(Y)
     if tr:
@@ -78,6 +100,8 @@ def project_many(X, A):
 
 
 if __name__ == '__main__':
+    print(random_model(5, 3, 2))
+    exit(0)
     #Test data
     A = np.array([[0, 1],
                   [-1, 0]])

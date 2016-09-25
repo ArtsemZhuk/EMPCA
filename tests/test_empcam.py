@@ -3,18 +3,10 @@ from sklearn.decomposition import PCA
 import numpy as np
 from numpy import dot, transpose
 from numpy.linalg import norm
-from utils import random_model, gram_schmidt
+from utils import random_matrix
 
 
 import numpy.testing as nt
-
-
-def random_matrix(n, m):
-    res = np.zeros([n, m])
-    for i in range(n):
-        for j in range(m):
-            res[i][j] = np.random.uniform()
-    return res
 
 
 def assert_almost_parallel(u, v):
@@ -35,18 +27,7 @@ def test_eigen_values(X, n=None):
         assert_almost_parallel(u, v)
 
 
-def show(N, D, d):
-    X, W, T = random_model(N, D, d)
-    empca = EMPCA(n_components=d, n_iter=300)
-    empca.fit(X)
-    print(empca.components_)
-    print(gram_schmidt(W.T))
-    
-
 if __name__ == '__main__':
-    show(30, 6, 1)
-
-    exit(0)
     for i in range(1, 10):
         test_eigen_values(random_matrix(20, 10), i)
         print("ok")
