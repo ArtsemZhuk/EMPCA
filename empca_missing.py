@@ -8,52 +8,43 @@ from numpy.linalg import inv
 from numpy import dot, transpose, trace
 from sklearn.utils import check_array
 from sklearn.base import BaseEstimator, TransformerMixin
-from utils import gram_schmidt, normalize, submatrix
+from utils import gram_schmidt, normalize, submatrix, get_KU
+from copy import copy, deepcopy
 
 
 class EMPCAM(BaseEstimator, TransformerMixin):
     def __init__(self, n_components, n_iter=100):
-        self.n_components = n_components
+        """
+        :param n_components: number of latent variables to derive
+        :param n_iter: number of iterations of EM-algoirithm
+        """
+        self.d_ = n_components
         self.n_iter = n_iter
 
+
     def fit(self, X, y=None):
-        """Fit the model with X.
-
-        Parameters
-        ----------
-        X: (n_samples, n_features)
-
-        Returns
-        -------
-        self: object
         """
-        self._fit(X)
-        return self
-
-    def _fit(self, X):
-
+        Fit the model with X
+        :param X: array-like, n_samples x n_features
+        :param y: target value, does not affect
+        :return: self
+        """
+        X = deepcopy(X)
         self.mean_ = normalize(X)
 
         N, D = X.shape
-        d = self.n_components
+        self.D_ = D
+        d = self.d_
 
         K = []
         U = []
-
         for sample in X:
-            k = []
-            u = []
-            for i in range(D):
-                if sample[i] is None:
-                    u.append(i)
-                else:
-                    k.append(i)
+            k, u = get_KU(sample)
             K.append(k)
             U.append(u)
 
-
         sigma = 1.0
-        W = np.zeros([D, d], dtype=np.float64)
+        W = np.empty([D, d], dtype=np.float64)
         for i in range(D):
             for j in range(d):
                 W[i][j] = np.random.uniform(-1, 1)
@@ -179,6 +170,35 @@ class EMPCAM(BaseEstimator, TransformerMixin):
         self.components_ = gram_schmidt(transpose(W))
         self.sigma_ = sigma
 
+        return self
+
+
+    def transform_one_(self, x):
+        W = self.components_.T
+        d = self.d_
+        sigma = self.sigma_
+
+        K, U = get_KU(x)
+
+        Wk = submatrix(W, K)
+        xk = submatrix(x.T, K).T
+
+        M = inv(Wk.T.dot(Wk) + sigma * np.eye(d))
+        print(xk)
+
+        return xk.dot(Wk).dot(M)
+
+
+    def transform(self, X, y=None):
+        assert X.shape[1] == self.D_
+        T = []
+        for sample in X:
+            T.append(self.transform_one_(sample))
+        return np.array(T)
+
+    def fit_transform(self, X, y=None):
+        return self.fit(X, y).transform(X, y)
+
 
 if __name__ == '__main__':
     X = np.array(
@@ -189,3 +209,4 @@ if __name__ == '__main__':
 
     e = EMPCAM(n_components=2, n_iter=200)
     e.fit(X)
+    print(e.transform(X))
