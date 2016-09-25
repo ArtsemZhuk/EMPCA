@@ -143,7 +143,8 @@ class EMPCAM(BaseEstimator, TransformerMixin):
                         W_new[i] += S[n][0][1][cnt]
                         cnt += 1
 
-            W_new = dot(W_new, inv(ETT))
+            W_new = W_new.dot(inv(ETT))
+            W_new = gram_schmidt(W_new, tr=True)
 
             sigma_new = 0
 

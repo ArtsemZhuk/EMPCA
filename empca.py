@@ -9,15 +9,14 @@ from numpy.linalg import inv
 from numpy import dot, transpose, trace
 from sklearn.utils import check_array
 from sklearn.base import BaseEstimator, TransformerMixin
-from utils import gram_schmidt, normalize
-
+from utils import gram_schmidt, normalize, project_many
+from copy import copy
+import sys
 
 class EMPCA(BaseEstimator, TransformerMixin):
 
-    def __init__(self, n_components, copy=False,
-                 n_iter=100):
+    def __init__(self, n_components, n_iter=100):
         self.n_components = n_components
-        self.copy = copy
         self.n_iter = n_iter
 
     def fit(self, X, y=None):
@@ -35,7 +34,7 @@ class EMPCA(BaseEstimator, TransformerMixin):
         return self
 
     def _fit(self, X):
-        X = check_array(X, dtype=[np.float64], ensure_2d=True, copy=self.copy)
+        X = check_array(X, dtype=[np.float64], ensure_2d=True)
 
         n_samples, n_features = X.shape
         n_components = self.n_components
@@ -43,22 +42,23 @@ class EMPCA(BaseEstimator, TransformerMixin):
         self.mean_ = normalize(X)
 
         sigma = 1
-        W = np.zeros([n_features, n_components], dtype=np.float64)
+
+        W = np.empty([n_features, n_components], dtype=np.float64)
         for i in range(n_features):
             for j in range(n_components):
-                W[i][j] = np.random.uniform()
+                W[i][j] = np.random.uniform(-1, 1)
 
         x_sum = sum([dot(X[i], transpose(X[i])) for i in range(n_samples)])
 
         for _ in range(self.n_iter):
             # e-step
-            Wt = transpose(W)
+            Wt = W.T
             M = inv(dot(Wt, W) + sigma * np.eye(n_components))
 
             Sigma = sigma * M
 
             mu = dot(X, W)
-            mu = dot(mu, transpose(M))
+            mu = dot(mu, M.T)
 
             # m-step
             L = dot(transpose(X), mu)
@@ -74,46 +74,46 @@ class EMPCA(BaseEstimator, TransformerMixin):
             #   print(A, B, C)
             sigma_new = (A - 2 * B + C) / n_samples / n_features
 
-            W = gram_schmidt(W_new, True)
+            W = gram_schmidt(W_new, tr=True)
             sigma = sigma_new
 
             #print("W=\n", W)
             #print("sigma=", sigma)
             #print()
 
-        self.components_ = gram_schmidt(transpose(W))
+        self.components_ = gram_schmidt(W.T)
         self.sigma_ = sigma
 
     def transform(self, X, y=None):
-        X = check_array(X, dtype=[np.float64], ensure_2d=True, copy=self.copy)
+        X = check_array(X, dtype=[np.float64], ensure_2d=True)
         X -= self.mean_
-
-        return dot(X, transpose(self.components_))
+        return project_many(X, self.components_)
 
     def fit_transform(self, X, y=None):
+        Xc = copy(X)
         self._fit(X)
-        normalize(X)
-        X = dot(X, transpose(self.components_))
-        return X
+        return self.transform(X, y)
 
 
 if __name__ == '__main__':
-    X = np.array([[1, 2], [2, 5], [5, 7]], dtype=np.float64)
-    #normalize(X)
+    X = np.array([[1, 1], [2, 2], [7, 7]], dtype=np.float64)
+    normalize(X)
     #print(X)
 
-    empca = EMPCA(n_components=2, n_iter=3000)
+    empca = EMPCA(n_components=1, n_iter=3000)
     empca.fit(X)
-    print(empca.components_)
+    print("transformed\n", empca.transform(X))
+    print("components\n", empca.components_)
     #print(empca.transform(X))
 
     pca = PCA(n_components=2)
     pca.fit(X)
-    print(pca.components_)
+    print("pca_components", pca.components_)
+    print("pca_ratio", pca.explained_variance_ratio_)
 
     exit(0)
 
-    pca = PCA(n_components=1, copy=False)
+    pca = PCA(n_components=1)
     print(pca.fit(X))
 
     Z = np.array([[0, 1], [1, 0], [5, 5]])
