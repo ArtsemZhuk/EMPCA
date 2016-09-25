@@ -5,7 +5,7 @@
 import numpy as np
 import sys
 from numpy.linalg import inv
-from numpy import dot, transpose, trace
+from numpy import dot, transpose, trace, isnan
 from sklearn.utils import check_array
 from sklearn.base import BaseEstimator, TransformerMixin
 from utils import gram_schmidt, normalize, submatrix, get_KU
@@ -126,7 +126,7 @@ class EMPCAM(BaseEstimator, TransformerMixin):
             for n in range(N):
                 cnt = 0
                 for i in range(D):
-                    if X[n][i] is not None:
+                    if not isnan(X[n][i]):
                         W_new[i] += X[n][i] * m[n][1]
                     else:
                         W_new[i] += S[n][0][1][cnt]
@@ -140,7 +140,7 @@ class EMPCAM(BaseEstimator, TransformerMixin):
             for n in range(N):
                 cnt = 0
                 for i in range(D):
-                    if X[n][i] is not None:
+                    if not isnan(X[n][i]):
                         sigma_new += np.square(X[n][i])
                     else:
                         sigma_new += np.square(m[n][0][cnt]) + S[n][0][0][cnt][cnt]
@@ -160,8 +160,8 @@ class EMPCAM(BaseEstimator, TransformerMixin):
 
 
             sigma_new /= N * D
-            print(sigma_new)
-            print(W_new)
+            #print(sigma_new)
+            #print(W_new)
 
             W = W_new
             sigma = sigma_new
@@ -184,7 +184,7 @@ class EMPCAM(BaseEstimator, TransformerMixin):
         xk = submatrix(x.T, K).T
 
         M = inv(Wk.T.dot(Wk) + sigma * np.eye(d))
-        print(xk)
+        #print(xk)
 
         return xk.dot(Wk).dot(M)
 
@@ -205,7 +205,7 @@ if __name__ == '__main__':
         [[1, 2, None],
          [None, None, 3],
          [10, 20, 30]],
-    )
+        dtype=np.float64)
 
     e = EMPCAM(n_components=2, n_iter=200)
     e.fit(X)

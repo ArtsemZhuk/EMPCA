@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.utils import check_array
+from numpy import isnan
 
 
 def random_matrix(n, m, gen=np.random.uniform):
@@ -10,15 +11,21 @@ def random_matrix(n, m, gen=np.random.uniform):
     return res
 
 
-def random_model(N, D, d):
+def random_model(N, D, d, missing_p=0):
     W = random_matrix(D, d, gen=lambda : np.random.uniform(-10, 10))
     eps = 0.5
 
-    X = []
     T = np.random.multivariate_normal(np.zeros(d), np.eye(d), N)
     noise = np.random.multivariate_normal(np.zeros(D), np.eye(D) * eps, N)
 
-    return (T.dot(W.T) + noise, W, T)
+    X = T.dot(W.T) + noise
+
+    for i in range(N):
+        for j in range(D):
+            if np.random.binomial(1, missing_p) == 1:
+                X[i][j] = np.nan
+
+    return (X, W, T)
 
 
 def normalize(X):
@@ -27,7 +34,7 @@ def normalize(X):
         cnt = 0
         sum = 0
         for j in range(X.shape[0]):
-            if X[j][i] is not None:
+            if not isnan(X[j][i]):
                 cnt += 1
                 sum += X[j][i]
 
@@ -35,7 +42,7 @@ def normalize(X):
         mean.append(sum)
 
         for j in range(X.shape[0]):
-            if X[j][i] is not None:
+            if not isnan(X[j][i]):
                 X[j][i] -= sum
 
     return np.array(mean)
@@ -99,8 +106,19 @@ def project_many(X, A):
     return np.array(res)
 
 
+def get_KU(sample):
+    k = []
+    u = []
+    for i in range(len(sample)):
+        if isnan(sample[i]):
+            u.append(i)
+        else:
+            k.append(i)
+    return k, u
+
+
 if __name__ == '__main__':
-    print(random_model(5, 3, 2))
+    print(random_model(5, 3, 2, 0.1)[0])
     exit(0)
     #Test data
     A = np.array([[0, 1],

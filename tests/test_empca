@@ -41,7 +41,7 @@ def show(N, D, d):
     empca.fit(X)
     print(empca.components_)
     print(gram_schmidt(W.T))
-    
+
 
 if __name__ == '__main__':
     show(30, 6, 1)
