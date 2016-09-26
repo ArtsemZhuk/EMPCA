@@ -4,6 +4,13 @@ from numpy import isnan
 
 
 def random_matrix(n, m, gen=np.random.uniform):
+    """
+    Generates random n x m matrix
+    :param n: height
+    :param m: width
+    :param gen: generator to fill cells
+    :return: n x m matrix
+    """
     res = np.zeros([n, m])
     for i in range(n):
         for j in range(m):
@@ -12,6 +19,14 @@ def random_matrix(n, m, gen=np.random.uniform):
 
 
 def random_model(N, D, d, missing_p=0):
+    """
+    Generates gaussian model with d latent variables in D-dimensional space
+    :param N: number of samples
+    :param D: dimension of feature space
+    :param d: dimension of space of latent variables
+    :param missing_p: percentage of missing values in a batch
+    :return: N x D matrix
+    """
     W = random_matrix(D, d, gen=lambda : np.random.uniform(-10, 10))
     eps = 0.5
 
@@ -29,6 +44,11 @@ def random_model(N, D, d, missing_p=0):
 
 
 def normalize(X):
+    """
+    Normalizes vectors in x; makes sum zero in each column
+    :param X: array-like, N x D
+    :return: N x D array, sum of entires in each column zero.
+    """
     mean = []
     for i in range(X.shape[1]):
         cnt = 0
@@ -49,6 +69,12 @@ def normalize(X):
 
 
 def submatrix(W, rows):
+    """
+    Return submatrix of W on rows
+    :param W: array-like, N x M
+    :param rows: subset of [0..M-1]
+    :return: W[rows][:]
+    """
     A = []
     for i in rows:
         A.append(W[i])
@@ -56,6 +82,14 @@ def submatrix(W, rows):
 
 
 def gram_schmidt(X, tr=False, remove=False, copy=False):
+    """
+    Applies Gram-Schmidt algorithm to rows of X
+    :param X: array of vectors
+    :param tr: if True, transpose X first and transpose back at the end
+    :param remove: if True, removes zero-vectors (in case of linear dependency)
+    :param copy: if True, copies X
+    :return: array of vectors of length one (and maybe zero if remove is False), pairwise orthogonal
+    """
     X = check_array(X, dtype=[np.float64], ensure_2d=True, copy=copy)
 
     if tr:
@@ -107,12 +141,24 @@ def project_many(X, A):
 
 
 def lies_in(v, A):
+    """
+    Checks that v lies in subspace spanned by rows of A
+    :param v: vector of length n
+    :param A: n x m matrix
+    :return: boolean
+    """
     for u in A:
         v -= u * v.dot(u)
     return np.linalg.norm(v) <= 1e-1
 
 
 def span_in(A, B):
+    """
+    Checks that each row of A lies in space spanned by rows of B
+    :param A: array of vectors
+    :param B: matrix
+    :return: boolean
+    """
     for a in A:
         if not lies_in(a, B):
             return False
@@ -120,6 +166,12 @@ def span_in(A, B):
 
 
 def get_KU(sample):
+    """
+    K = [i : not isnan(sample[i])]
+    U = complement of K
+    :param sample: array of floats
+    :return: pair (K, U)
+    """
     k = []
     u = []
     for i in range(len(sample)):

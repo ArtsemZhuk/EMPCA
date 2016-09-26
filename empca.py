@@ -15,10 +15,20 @@ import sys
 
 class EMPCA(BaseEstimator, TransformerMixin):
     def __init__(self, n_components, n_iter=100):
+        """
+        :param n_components: number of latent varbles; dimensionality of subspace to project on
+        :param n_iter: number of iterations
+        """
         self.n_components = n_components
         self.n_iter = n_iter
 
     def fit(self, X, y=None):
+        """
+        Fit the model with X
+        :param X: array-like, n_samples x n_features
+        :param y: redundant
+        :return: self
+        """
         X = check_array(X, dtype=[np.float64], ensure_2d=True)
 
         n_samples, n_features = X.shape
@@ -56,15 +66,10 @@ class EMPCA(BaseEstimator, TransformerMixin):
             C = trace(dot(dot(W_new_t, W_new), R))
             B = sum([dot(dot(mu[i], W_new_t), transpose(X[i])) for i in range(n_samples)])
             A = x_sum
-            #   print(A, B, C)
             sigma_new = (A - 2 * B + C) / n_samples / n_features
 
             W = gram_schmidt(W_new, tr=True)
             sigma = sigma_new
-
-            #print("W=\n", W)
-            #print("sigma=", sigma)
-            #print()
 
         self.components_ = gram_schmidt(W.T)
 
@@ -74,17 +79,20 @@ class EMPCA(BaseEstimator, TransformerMixin):
 
         for i in range(n_components):
             l = np.linalg.norm(Wl[i])
-            print(l)
             lambdas.append(l)
 
         self.lambdas_ = lambdas
         s = sum(lambdas) + (n_features - n_components) * sigma
-        print("!!: ", sum(lambdas))
-        print("!!!: ", (n_features - n_components) * sigma)
         self.explained_ratio_ = lambdas / s
         self.sigma_ = sigma
 
     def transform(self, X, y=None):
+        """
+        Projects X onto found subspace
+        :param X: vectors to project
+        :param y: redundant
+        :return:
+        """
         X = check_array(X, dtype=[np.float64], ensure_2d=True)
         X -= self.mean_
         return project_many(X, self.components_)

@@ -160,8 +160,6 @@ class EMPCAM(BaseEstimator, TransformerMixin):
 
 
             sigma_new /= N * D
-            #print(sigma_new)
-            #print(W_new)
 
             W = W_new
             sigma = sigma_new
@@ -184,12 +182,17 @@ class EMPCAM(BaseEstimator, TransformerMixin):
         xk = submatrix(x.T, K).T
 
         M = inv(Wk.T.dot(Wk) + sigma * np.eye(d))
-        #print(xk)
 
         return xk.dot(Wk).dot(M)
 
 
     def transform(self, X, y=None):
+        """
+        Projects X onto found subspace, fills missing values with MLE estimates
+        :param X: array-like, n x n_features
+        :param y: redundant
+        :return: n x n_comoponents
+        """
         assert X.shape[1] == self.D_
         T = []
         for sample in X:
