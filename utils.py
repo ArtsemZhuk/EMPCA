@@ -25,7 +25,7 @@ def random_model(N, D, d, missing_p=0):
             if np.random.binomial(1, missing_p) == 1:
                 X[i][j] = np.nan
 
-    return (X, W, T)
+    return (X, W.T, T)
 
 
 def normalize(X):
@@ -68,7 +68,7 @@ def gram_schmidt(X, tr=False, remove=False, copy=False):
             cur = cur - y * np.dot(cur, y)
 
         len = np.linalg.norm(cur)
-        if not remove or len > 0:
+        if len > 0:
             Y.append(cur / len)
         elif not remove:
             Y.append(cur)
@@ -106,6 +106,19 @@ def project_many(X, A):
     return np.array(res)
 
 
+def lies_in(v, A):
+    for u in A:
+        v -= u * v.dot(u)
+    return np.linalg.norm(v) <= 1e-1
+
+
+def span_in(A, B):
+    for a in A:
+        if not lies_in(a, B):
+            return False
+    return True
+
+
 def get_KU(sample):
     k = []
     u = []
@@ -118,6 +131,18 @@ def get_KU(sample):
 
 
 if __name__ == '__main__':
+    A = gram_schmidt(np.array([[1, 2],
+                               [5, 10]]))
+
+    B = gram_schmidt(np.array([[13, 12],
+                               [12, 12312]]))
+
+    print(span_in(A, B))
+    exit(0)
+
+    X, W, T = random_model(30, 6, 1)
+    print(W)
+    exit(0)
     print(random_model(5, 3, 2, 0.1)[0])
     exit(0)
     #Test data

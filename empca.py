@@ -9,31 +9,16 @@ from numpy.linalg import inv
 from numpy import dot, transpose, trace
 from sklearn.utils import check_array
 from sklearn.base import BaseEstimator, TransformerMixin
-from utils import gram_schmidt, normalize, project_many
+from utils import gram_schmidt, normalize, project_many, random_model
 from copy import copy
 import sys
 
 class EMPCA(BaseEstimator, TransformerMixin):
-
     def __init__(self, n_components, n_iter=100):
         self.n_components = n_components
         self.n_iter = n_iter
 
     def fit(self, X, y=None):
-        """Fit the model with X.
-
-        Parameters
-        ----------
-        X: (n_samples, n_features)
-
-        Returns
-        -------
-        self: object
-        """
-        self._fit(X)
-        return self
-
-    def _fit(self, X):
         X = check_array(X, dtype=[np.float64], ensure_2d=True)
 
         n_samples, n_features = X.shape
@@ -82,6 +67,21 @@ class EMPCA(BaseEstimator, TransformerMixin):
             #print()
 
         self.components_ = gram_schmidt(W.T)
+
+        W = self.components_
+        Wl = W.dot(X.T).dot(X)
+        lambdas = []
+
+        for i in range(n_components):
+            l = np.linalg.norm(Wl[i])
+            print(l)
+            lambdas.append(l)
+
+        self.lambdas_ = lambdas
+        s = sum(lambdas) + (n_features - n_components) * sigma
+        print("!!: ", sum(lambdas))
+        print("!!!: ", (n_features - n_components) * sigma)
+        self.explained_ratio_ = lambdas / s
         self.sigma_ = sigma
 
     def transform(self, X, y=None):
@@ -91,19 +91,20 @@ class EMPCA(BaseEstimator, TransformerMixin):
 
     def fit_transform(self, X, y=None):
         Xc = copy(X)
-        self._fit(X)
+        self.fit(X)
         return self.transform(X, y)
 
 
 if __name__ == '__main__':
-    X = np.array([[111, 12], [123, 4423], [125, 61]], dtype=np.float64)
-    normalize(X)
+    X, W, T = random_model(30, 7, 6) #np.array([[111, 12], [123, 4423], [125, 61]], dtype=np.float64)
+    #normalize(X)
     #print(X)
 
-    empca = EMPCA(n_components=1, n_iter=3000)
+    empca = EMPCA(n_components=2, n_iter=3000)
     empca.fit(X)
     print("transformed\n", empca.transform(X))
     print("components\n", empca.components_)
+    print("ratio:\n", empca.explained_ratio_)
     #print(empca.transform(X))
 
     pca = PCA(n_components=1)

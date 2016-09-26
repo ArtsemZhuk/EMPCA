@@ -14,7 +14,7 @@ def show(N, D, d):
     empca = EMPCAM(n_components=d, n_iter=300)
     empca.fit(X)
     print(empca.components_)
-    print(gram_schmidt(W.T))
+    print(gram_schmidt(W))
 
 
 if __name__ == '__main__':
