@@ -18,29 +18,40 @@ def random_matrix(n, m, gen=np.random.uniform):
     return res
 
 
-def random_model(N, D, d, missing_p=0):
+def random_model(N, D, d, W=None, eps=0.5):
     """
     Generates gaussian model with d latent variables in D-dimensional space
     :param N: number of samples
     :param D: dimension of feature space
     :param d: dimension of space of latent variables
-    :param missing_p: percentage of missing values in a batch
     :return: N x D matrix
     """
-    W = random_matrix(D, d, gen=lambda : np.random.uniform(-10, 10))
-    eps = 0.5
+    if W is None:
+        W = random_matrix(D, d, gen=lambda : np.random.uniform(-10, 10))
 
     T = np.random.multivariate_normal(np.zeros(d), np.eye(d), N)
     noise = np.random.multivariate_normal(np.zeros(D), np.eye(D) * eps, N)
 
     X = T.dot(W.T) + noise
 
-    for i in range(N):
-        for j in range(D):
-            if np.random.binomial(1, missing_p) == 1:
-                X[i][j] = np.nan
-
     return (X, W.T, T)
+
+
+def add_missing(X, ratio=0):
+    """
+    adds ratio of nan values to matrix X
+    :param X: matrix
+    :param ratio: number in [0, 1]
+    :return: X with missing values
+    """
+    for i in range(X.shape[0]):
+        all = True
+        for j in range(X.shape[1]):
+            if np.random.binomial(1, ratio) == 1 and (not all or j != X.shape[1] - 1):
+                X[i][j] = np.nan
+            else:
+                all = False
+    return X
 
 
 def normalize(X):

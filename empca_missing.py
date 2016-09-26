@@ -133,7 +133,6 @@ class EMPCAM(BaseEstimator, TransformerMixin):
                         cnt += 1
 
             W_new = W_new.dot(inv(ETT))
-            W_new = gram_schmidt(W_new, tr=True)
 
             sigma_new = 0
 
@@ -161,6 +160,7 @@ class EMPCAM(BaseEstimator, TransformerMixin):
 
             sigma_new /= N * D
 
+            W_new = gram_schmidt(W_new, tr=True)
             W = W_new
             sigma = sigma_new
 
@@ -169,6 +169,32 @@ class EMPCAM(BaseEstimator, TransformerMixin):
         self.sigma_ = sigma
 
         return self
+
+
+    def fill_missing_one_(self, x):
+        W = self.components_.T
+        d = self.d_
+        sigma = self.sigma_
+
+        K, U = get_KU(x)
+
+        Wk = submatrix(W, K)
+        xk = submatrix(x.T, K).T
+
+        M = inv(Wk.T.dot(Wk))
+        return xk.dot(Wk).dot(M).dot(W.T)
+
+
+    def fill_missing(self, X):
+        """
+        Fills missing values in X
+        :param X: array of vectors with missing values
+        :return: X with filled missing values
+        """
+        Y = []
+        for x in X:
+            Y.append(self.fill_missing_one_(x))
+        return np.array(Y)
 
 
     def transform_one_(self, x):
@@ -181,7 +207,7 @@ class EMPCAM(BaseEstimator, TransformerMixin):
         Wk = submatrix(W, K)
         xk = submatrix(x.T, K).T
 
-        M = inv(Wk.T.dot(Wk) + sigma * np.eye(d))
+        M = inv(Wk.T.dot(Wk))
 
         return xk.dot(Wk).dot(M)
 
