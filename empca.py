@@ -82,8 +82,7 @@ class EMPCA(BaseEstimator, TransformerMixin):
             lambdas.append(l)
 
         self.lambdas_ = lambdas
-        s = sum(lambdas) + (n_features - n_components) * sigma
-        self.explained_ratio_ = lambdas / s
+        self.explained_variance_ratio_ = lambdas / x_sum
         self.sigma_ = sigma
 
     def transform(self, X, y=None):
@@ -104,21 +103,21 @@ class EMPCA(BaseEstimator, TransformerMixin):
 
 
 if __name__ == '__main__':
-    X, W, T = random_model(30, 7, 6) #np.array([[111, 12], [123, 4423], [125, 61]], dtype=np.float64)
+    X, W, T = random_model(300, 100, 30) #np.array([[111, 12], [123, 4423], [125, 61]], dtype=np.float64)
     #normalize(X)
     #print(X)
 
-    empca = EMPCA(n_components=2, n_iter=3000)
+    empca = EMPCA(n_components=5, n_iter=300)
     empca.fit(X)
-    print("transformed\n", empca.transform(X))
-    print("components\n", empca.components_)
-    print("ratio:\n", empca.explained_ratio_)
+    #print("transformed\n", empca.transform(X))
+    #print("components\n", empca.components_)
+    print("ratio:\n", empca.explained_variance_ratio_)
     #print(empca.transform(X))
 
-    pca = PCA(n_components=1)
+    pca = PCA(n_components=5)
     pca.fit(X)
-    print("pca_components", pca.components_)
-    print("pca_transfomed", pca.transform(X))
+    #print("pca_components", pca.components_)
+    #print("pca_transfomed", pca.transform(X))
     print("pca_ratio", pca.explained_variance_ratio_)
 
     exit(0)

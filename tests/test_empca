@@ -41,7 +41,7 @@ def show(N, D, d):
     empca.fit(X)
     print(empca.components_)
     print(gram_schmidt(W))
-    print(empca.explained_ratio_)
+    print(empca.explained_variance_ratio_)
 
 
 if __name__ == '__main__':
