@@ -116,6 +116,14 @@ class EMPCA(BaseEstimator, TransformerMixin):
         X -= self.mean_
         return X.dot(self.components_.T)
 
+
+    def mean_square_error(self, X):
+        Y = X - X.dot(self.components_.T).dot(self.components_)
+        t = trace(Y.T.dot(Y))
+        t /= X.shape[0]
+        return np.sqrt(t)
+
+
     def fit_transform(self, X, y=None):
         Xc = copy(X)
         self.fit(X)
@@ -133,6 +141,7 @@ if __name__ == '__main__':
     #print("components\n", empca.components_)
     print("ratio:\n", empca.explained_variance_ratio_)
     #print(empca.transform(X))
+    print('mean_square_error=', empca.mean_square_error(X))
 
     pca = PCA(n_components=5)
     pca.fit(X)
