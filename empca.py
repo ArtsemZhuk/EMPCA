@@ -117,6 +117,10 @@ class EMPCA(BaseEstimator, TransformerMixin):
         return X.dot(self.components_.T)
 
 
+    def inverse_transform(self, Y):
+        return Y.dot(self.components_)
+
+
     def mean_square_error(self, X):
         Y = X - X.dot(self.components_.T).dot(self.components_)
         t = trace(Y.T.dot(Y))
